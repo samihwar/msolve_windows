@@ -17,6 +17,7 @@
  * Jérémy Berthomieu
  * Christian Eder
  * Mohab Safey El Din */
+#include "../compat.h"
 
 #include "../fglm/data_fglm.c"
 #include "../fglm/libfglm.h"
@@ -239,7 +240,7 @@ static inline int32_t *monomial_basis(long length, long nvars,
   (*dquot) = 0;
 
   if(is_divisible_lexp(nvars, length, (basis), bexp_lm)){
-    free(basis);
+    free(basis);  // calloc
     return NULL;
   }
   else{
@@ -299,8 +300,8 @@ static inline int32_t *monomial_basis(long length, long nvars,
 #endif
   }
 
-  free(new_basis);
-  free(ind);
+  free(new_basis);  // malloc
+  free(ind);  // calloc
   return basis;
 }
 
@@ -319,7 +320,7 @@ static inline int32_t *monomial_basis_colon(long length, long nvars,
 
   if(is_divisible_lexp(nvars, length, (basis), bexp_lm)){
     fprintf(stderr, "Stop\n");
-    free(basis);
+    free(basis);  // calloc
     return NULL;
   }
   else{
@@ -381,8 +382,8 @@ static inline int32_t *monomial_basis_colon(long length, long nvars,
     deg++;
   }
 
-  free(new_basis);
-  free(ind);
+  free(new_basis);  // malloc
+  free(ind);  // calloc
   return basis;
 }
 
@@ -400,7 +401,7 @@ static inline int32_t *monomial_basis_colon_no_zero(long length, long nvars,
 
   if(is_divisible_lexp(nvars, length, (basis), bexp_lm)){
     fprintf(stderr, "Stop\n");
-    free(basis);
+    free(basis);  //calloc
     return NULL;
   }
   else{
@@ -460,8 +461,8 @@ static inline int32_t *monomial_basis_colon_no_zero(long length, long nvars,
 #endif
     deg++;
   }
-  free(new_basis);
-  free(ind);
+  free(new_basis);  //malloc
+  free(ind);  //calloc
 
   /* cleanup by removing monomials that will be sent to 0 after
      iterative multiplication by xn */
@@ -1319,7 +1320,7 @@ static inline int32_t *monomial_basis_enlarged(long length, long nvars,
   int32_t deg = 0;
 
   if(is_divisible_lexp(nvars, length, basis, bexp_lm)){
-    free(basis);
+    free(basis);  // calloc
     return NULL;
   }
   else{
@@ -1392,8 +1393,8 @@ static inline int32_t *monomial_basis_enlarged(long length, long nvars,
 #endif
   }
 
-  free(new_basis);
-  free(ind);
+  free(new_basis);  // malloc
+  free(ind);  // calloc
   return basis;
 }
 
@@ -1544,15 +1545,15 @@ static inline sp_matfglm_t * build_matrixn(int32_t *lmb, long dquot, int32_t bld
         count++;
         if(len_xn < count && i < dquot){
           fprintf(stderr, "One should not arrive here (build_matrix)\n");
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          free(matrix); // malloc
 
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
+          free(len_gb_xn);  // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // calloc
           return NULL;
         }
       }
@@ -1561,17 +1562,17 @@ static inline sp_matfglm_t * build_matrixn(int32_t *lmb, long dquot, int32_t bld
         fprintf(stderr, "Multiplication by ");
         display_monomial_full(stderr, nv, NULL, 0, exp);
         fprintf(stderr, " gets outside the staircase\n");
-        free(matrix->dense_mat);
-        free(matrix->dense_idx);
-        free(matrix->triv_idx);
-        free(matrix->triv_pos);
-        free(matrix->dst);
-        free(matrix);
+        aligned_free(matrix->dense_mat);  // posix
+        aligned_free(matrix->dense_idx);  // posix
+        aligned_free(matrix->triv_idx); // posix
+        aligned_free(matrix->triv_pos); // posix
+        aligned_free(matrix->dst);  // posix
+        free(matrix); // malloc
         matrix  = NULL;
 
-        free(len_gb_xn);
-        free(start_cf_gb_xn);
-        free(div_xn);
+        free(len_gb_xn);  // malloc
+        free(start_cf_gb_xn); // malloc
+        free(div_xn); // calloc
         return matrix;
       }
     }
@@ -1589,9 +1590,9 @@ static inline sp_matfglm_t * build_matrixn(int32_t *lmb, long dquot, int32_t bld
     }
   }
 
-  free(len_gb_xn);
-  free(start_cf_gb_xn);
-  free(div_xn);
+  free(len_gb_xn);  // malloc
+  free(start_cf_gb_xn); // malloc
+  free(div_xn); //calloc
 
   return matrix;
 }
@@ -1924,21 +1925,21 @@ build_matrixn_colon(int32_t *lmb, long dquot, int32_t bld,
 	  count++;
 	  if(len_xn < count && i < dquot){
 	    fprintf(stderr, "One should not arrive here (build_matrix)\n");
-	    free(lens);
-	    free(exps);
-	    free(cfs);
-	    free(matrix->dense_mat);
-	    free(matrix->dense_idx);
-	    free(matrix->triv_idx);
-	    free(matrix->triv_pos);
-	    free(matrix->zero_idx);
-	    free(matrix->dst);
-	    free(matrix);
-	    free(evi);
-	    free(len_gb_xn);
-	    free(start_cf_gb_xn);
-	    free(div_xn);
-	    free(div_not_xn);
+	    free(lens); // malloc
+	    free(exps); // malloc
+	    free(cfs);  // malloc
+	    aligned_free(matrix->dense_mat);  // posix
+	    aligned_free(matrix->dense_idx);  // posix
+	    aligned_free(matrix->triv_idx); // posix
+	    aligned_free(matrix->triv_pos); // posix
+	    aligned_free(matrix->zero_idx); // posix
+	    aligned_free(matrix->dst);  // posix
+	    free(matrix); // calloc
+	    free(evi);  // malloc
+	    free(len_gb_xn);  // malloc
+	    free(start_cf_gb_xn); // malloc
+	    free(div_xn); // calloc
+	    free(div_not_xn); // calloc
 	    return NULL;
 	  }
 	}
@@ -2025,14 +2026,14 @@ build_matrixn_colon(int32_t *lmb, long dquot, int32_t bld,
 			     tbr, bht, evi, st, nv, maxdeg);
   }
 #endif
-  free(lens);
-  free(exps);
-  free(cfs);
-  free(evi);
-  free(len_gb_xn);
-  free(start_cf_gb_xn);
-  free(div_xn);
-  free(div_not_xn);
+  free(lens); // malloc
+  free(exps); // malloc
+  free(cfs);  // malloc
+  free(evi);  // malloc
+  free(len_gb_xn);  // malloc
+  free(start_cf_gb_xn); // malloc
+  free(div_xn); // calloc
+  free(div_not_xn); // calloc
   return matrix;
 }
 
@@ -2384,21 +2385,21 @@ build_matrixn_colon_no_zero(int32_t *lmb, long dquot, int32_t bld,
 	  count++;
 	  if(len_xn < count && i < dquot){
 	    fprintf(stderr, "One should not arrive here (build_matrix)\n");
-	    free(lens);
-	    free(exps);
-	    free(cfs);
-	    free(matrix->dense_mat);
-	    free(matrix->dense_idx);
-	    free(matrix->triv_idx);
-	    free(matrix->triv_pos);
-	    free(matrix->dst);
+	    free(lens); // malloc
+	    free(exps); // malloc
+	    free(cfs);  //malloc
+	    aligned_free(matrix->dense_mat);  // posix
+	    aligned_free(matrix->dense_idx);  // posix
+	    aligned_free(matrix->triv_idx); // posix
+	    aligned_free(matrix->triv_pos); // posix
+	    aligned_free(matrix->dst);  // posix
 	    /* free(matrix->zero_idx); */
-	    free(matrix);
-	    free(evi);
-	    free(len_gb_xn);
-	    free(start_cf_gb_xn);
-	    free(div_xn);
-	    free(div_not_xn);
+	    free(matrix); // calloc
+	    free(evi);  // malloc
+	    free(len_gb_xn);  // malloc
+	    free(start_cf_gb_xn); // malloc
+	    free(div_xn); // calloc
+	    free(div_not_xn); // calloc
 	    return NULL;
 	  }
 	}
@@ -2441,14 +2442,14 @@ build_matrixn_colon_no_zero(int32_t *lmb, long dquot, int32_t bld,
 				     tobereduced + count_not_lm + i,
 				     tbr, bht, evi, st, nv, maxdeg);
   }
-  free(lens);
-  free(exps);
-  free(cfs);
-  free(evi);
-  free(len_gb_xn);
-  free(start_cf_gb_xn);
-  free(div_xn);
-  free(div_not_xn);
+  free(lens); // malloc
+  free(exps); // malloc
+  free(cfs);  // malloc
+  free(evi);  // malloc
+  free(len_gb_xn);  // malloc
+  free(start_cf_gb_xn); // malloc
+  free(div_xn); // calloc
+  free(div_not_xn); // calloc
   return matrix;
 }
 
@@ -2605,16 +2606,16 @@ static inline sp_matfglm_t * build_matrixn_trace(int32_t **bdiv_xn,
         count++;
         if(len_xn < count && i < dquot){
           fprintf(stderr, "One should not arrive here (build_matrix)\n");
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
+          free(len_gb_xn);  // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // calloc
           return NULL;
         }
       }
@@ -2623,16 +2624,16 @@ static inline sp_matfglm_t * build_matrixn_trace(int32_t **bdiv_xn,
         fprintf(stderr, "Multiplication by ");
         display_monomial_full(stderr, nv, NULL, 0, exp);
         fprintf(stderr, " gets outside the staircase\n");
-        free(matrix->dense_mat);
-        free(matrix->dense_idx);
-        free(matrix->triv_idx);
-        free(matrix->triv_pos);
-        free(matrix->dst);
-        free(matrix);
+        aligned_free(matrix->dense_mat);  // posix
+        aligned_free(matrix->dense_idx);  // posix
+        aligned_free(matrix->triv_idx); // posix
+        aligned_free(matrix->triv_pos); // posix
+        aligned_free(matrix->dst);  // posix
+        free(matrix); // calloc
 
-        free(len_gb_xn);
-        free(start_cf_gb_xn);
-        free(div_xn);
+        free(len_gb_xn);  // malloc
+        free(start_cf_gb_xn); // malloc
+        free(div_xn); // calloc
         return NULL;
       }
     }
@@ -2802,16 +2803,16 @@ static inline sp_matfglm_t * build_matrixn_from_bs(int32_t *lmb, long dquot,
         count++;
         if(len_xn < count && i < dquot){
           fprintf(stderr, "One should not arrive here (build_matrix with trace)\n");
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
+          free(len_gb_xn);  // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // calloc
           return NULL;
         }
       }
@@ -2822,16 +2823,16 @@ static inline sp_matfglm_t * build_matrixn_from_bs(int32_t *lmb, long dquot,
         display_monomial_full(stderr, nv, NULL, 0, exp);
 #endif
         fprintf(stderr, " gets outside the staircase\n");
-        free(matrix->dense_mat);
-        free(matrix->dense_idx);
-        free(matrix->triv_idx);
-        free(matrix->triv_pos);
-        free(matrix->dst);
-        free(matrix);
+        aligned_free(matrix->dense_mat);  // posix
+        aligned_free(matrix->dense_idx);  // posix
+        aligned_free(matrix->triv_idx); // posix
+        aligned_free(matrix->triv_pos); // posix
+        aligned_free(matrix->dst);  // posix
+        free(matrix); // calloc
 
-        free(len_gb_xn);
-        free(start_cf_gb_xn);
-        free(div_xn);
+        free(len_gb_xn);  // malloc
+        free(start_cf_gb_xn); // malloc
+        free(div_xn); // calloc
         return NULL;
       }
     }
@@ -2848,9 +2849,9 @@ static inline sp_matfglm_t * build_matrixn_from_bs(int32_t *lmb, long dquot,
     }
   }
 
-  free(len_gb_xn);
-  free(start_cf_gb_xn);
-  free(div_xn);
+  free(len_gb_xn);  // malloc
+  free(start_cf_gb_xn); // malloc
+  free(div_xn); // calloc
 
   return matrix;
 }
@@ -2997,16 +2998,16 @@ static inline void build_matrixn_from_bs_trace_application(sp_matfglm_t *matrix,
         count++;
         if(len_xn < count && i < dquot){
           fprintf(stderr, "One should not arrive here (build_matrix with trace)\n");
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
+          free(len_gb_xn);  // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // calloc
           exit(1);
         }
       }
@@ -3015,16 +3016,16 @@ static inline void build_matrixn_from_bs_trace_application(sp_matfglm_t *matrix,
         fprintf(stderr, "Multiplication by ");
         display_monomial_full(stderr, nv, NULL, 0, exp);
         fprintf(stderr, " gets outside the staircase\n");
-        free(matrix->dense_mat);
-        free(matrix->dense_idx);
-        free(matrix->triv_idx);
-        free(matrix->triv_pos);
-        free(matrix->dst);
-        free(matrix);
+        aligned_free(matrix->dense_mat);  // posix
+        aligned_free(matrix->dense_idx);  // posix
+        aligned_free(matrix->triv_idx); // posix
+        aligned_free(matrix->triv_pos); // posix
+        aligned_free(matrix->dst);  // posix
+        free(matrix); // calloc
 
-        free(len_gb_xn);
-        free(start_cf_gb_xn);
-        free(div_xn);
+        free(len_gb_xn);  // malloc
+        free(start_cf_gb_xn); // malloc
+        free(div_xn); // calloc
         return ;
         //        exit(1);
       }
@@ -3094,8 +3095,8 @@ static inline void build_matrixn_unstable_from_bs_trace_application(sp_matfglm_t
       printf("Problem with normalform, stopped computation.\n");
       exit(1);
     }
-    free(mul);
-    free(md);
+    free(mul);  // calloc
+    free(md); // malloc
   }
   long len0 = matrix->nrows;
   long len_xn = len0-count_not_lm; //get_div_xn(bexp_lm, bs->lml, nv, div_xn);
@@ -3172,22 +3173,22 @@ static inline void build_matrixn_unstable_from_bs_trace_application(sp_matfglm_t
         count++;
         if(len_xn < count && i < dquot){
           fprintf(stderr, "One should not arrive here (build_matrix with trace)\n");
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
 	  free_basis_without_hash_table(&tbr);
-	  free(cfs_extra_nf);
-	  free(exps_extra_nf);
-	  free(lens_extra_nf);
-	  free(extra_nf);
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
-	  free(evi);
+	  free(cfs_extra_nf); // malloc
+	  free(exps_extra_nf);  // malloc
+	  free(lens_extra_nf);  // malloc
+	  free(extra_nf); // malloc
+          free(len_gb_xn); // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // malloc
+	  free(evi); // malloc
           exit(1);
         }
       }
@@ -3201,22 +3202,22 @@ static inline void build_matrixn_unstable_from_bs_trace_application(sp_matfglm_t
 	count_nf++;
 	if (count_not_lm < count_nf && i < dquot) {
           fprintf(stderr, "One should not arrive here (build_matrix with trace)\n");
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
 	  free_basis_without_hash_table(&tbr);
-	  free(cfs_extra_nf);
-	  free(exps_extra_nf);
-	  free(lens_extra_nf);
-	  free(extra_nf);
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
-	  free(evi);
+	  free(cfs_extra_nf); // malloc
+	  free(exps_extra_nf);  // malloc
+	  free(lens_extra_nf);  // malloc
+	  free(extra_nf); // malloc
+          free(len_gb_xn); // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // malloc
+	  free(evi); // malloc
           exit(1);
         }
       }
@@ -3225,22 +3226,22 @@ static inline void build_matrixn_unstable_from_bs_trace_application(sp_matfglm_t
         fprintf(stderr, "Multiplication by ");
         display_monomial_full(stderr, nv, NULL, 0, exp);
         fprintf(stderr, " gets outside the staircase\n");
-        free(matrix->dense_mat);
-        free(matrix->dense_idx);
-        free(matrix->triv_idx);
-        free(matrix->triv_pos);
-        free(matrix->dst);
-        free(matrix);
+        aligned_free(matrix->dense_mat);  // posix
+        aligned_free(matrix->dense_idx);  // posix
+        aligned_free(matrix->triv_idx); // posix
+        aligned_free(matrix->triv_pos); // posix
+        aligned_free(matrix->dst);  // posix
+        free(matrix); // calloc
 
-	free_basis_without_hash_table(&tbr);
-	free(cfs_extra_nf);
-	free(exps_extra_nf);
-	free(lens_extra_nf);
-	free(extra_nf);
-	free(len_gb_xn);
-        free(start_cf_gb_xn);
-        free(div_xn);
-	free(evi);
+  free_basis_without_hash_table(&tbr);
+  free(cfs_extra_nf); // malloc
+  free(exps_extra_nf);  // malloc
+  free(lens_extra_nf);  // malloc
+  free(extra_nf); // malloc
+  free(len_gb_xn); // malloc
+        free(start_cf_gb_xn); // malloc
+        free(div_xn); // malloc
+  free(evi); // malloc
         return ;
         //        exit(1);
       }
@@ -3419,16 +3420,16 @@ static inline sp_matfglm_t * build_matrixn_from_bs_trace(int32_t **bdiv_xn,
           if(info_level){
             fprintf(stderr, "Staircase is not generic (1 => explain better)\n");
           }
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
+          free(len_gb_xn);  // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // calloc
           return NULL;
         }
       }
@@ -3439,16 +3440,16 @@ static inline sp_matfglm_t * build_matrixn_from_bs_trace(int32_t **bdiv_xn,
           display_monomial_full(stderr, nv, NULL, 0, exp);
           fprintf(stderr, " gets outside the staircase\n");
         }
-        free(matrix->dense_mat);
-        free(matrix->dense_idx);
-        free(matrix->triv_idx);
-        free(matrix->triv_pos);
-        free(matrix->dst);
-        free(matrix);
+        aligned_free(matrix->dense_mat);  // posix
+        aligned_free(matrix->dense_idx);  // posix
+        aligned_free(matrix->triv_idx); // posix
+        aligned_free(matrix->triv_pos); // posix
+        aligned_free(matrix->dst);  // posix
+        free(matrix); // calloc
 
-        free(len_gb_xn);
-        free(start_cf_gb_xn);
-        free(div_xn);
+        free(len_gb_xn);  // malloc
+        free(start_cf_gb_xn); // malloc
+        free(div_xn); // calloc
         return NULL;
       }
     }
@@ -3607,10 +3608,10 @@ static inline sp_matfglm_t * build_matrixn_unstable_from_bs_trace(int32_t **bdiv
       fprintf(stderr, "Staircase is not generic\n");
       fprintf(stderr, "and too many normal forms need to be computed\n");
     }
-    free(extra_nf);
-    free(len_gb_xn);
-    free(start_cf_gb_xn);
-    free(div_xn);
+    free(extra_nf); // calloc
+    free(len_gb_xn);  // malloc
+    free(start_cf_gb_xn); // malloc
+    free(div_xn); // calloc
     return NULL;
   }
 
@@ -3668,8 +3669,8 @@ static inline sp_matfglm_t * build_matrixn_unstable_from_bs_trace(int32_t **bdiv
       printf("Problem with normalform, stopped computation.\n");
       exit(1);
     }
-    free(mul);
-    free(md);
+    free(mul);  // calloc
+    free(md); // malloc
   }
   sp_matfglm_t *matrix ALIGNED32 = calloc(1, sizeof(sp_matfglm_t));
   matrix->charac = fc;
@@ -3776,22 +3777,22 @@ static inline sp_matfglm_t * build_matrixn_unstable_from_bs_trace(int32_t **bdiv
 	  if (info_level){
 	    fprintf(stderr, "Staircase is not generic (1 => explain better)\n");
 	  }
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
-	  free_basis_without_hash_table(&tbr);
-	  free(cfs_extra_nf);
-	  free(exps_extra_nf);
-	  free(lens_extra_nf);
-	  free(extra_nf);
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
-	  free(evi);
+    free_basis_without_hash_table(&tbr);
+    free(cfs_extra_nf); // malloc
+    free(exps_extra_nf);  // malloc
+    free(lens_extra_nf);  // malloc
+    free(extra_nf); // malloc
+          free(len_gb_xn); // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // malloc
+    free(evi); // malloc
           return NULL;
         }
       }
@@ -3812,22 +3813,22 @@ static inline sp_matfglm_t * build_matrixn_unstable_from_bs_trace(int32_t **bdiv
 	  if (info_level){
 	    fprintf(stderr, "Staircase is not generic (1 => explain better)\n");
 	  }
-          free(matrix->dense_mat);
-          free(matrix->dense_idx);
-          free(matrix->triv_idx);
-          free(matrix->triv_pos);
-          free(matrix->dst);
-          free(matrix);
+          aligned_free(matrix->dense_mat);  // posix
+          aligned_free(matrix->dense_idx);  // posix
+          aligned_free(matrix->triv_idx); // posix
+          aligned_free(matrix->triv_pos); // posix
+          aligned_free(matrix->dst);  // posix
+          free(matrix); // calloc
 
-	  free_basis_without_hash_table(&tbr);
-	  free(cfs_extra_nf);
-	  free(exps_extra_nf);
-	  free(lens_extra_nf);
-	  free(extra_nf);
-          free(len_gb_xn);
-          free(start_cf_gb_xn);
-          free(div_xn);
-	  free(evi);
+    free_basis_without_hash_table(&tbr);
+    free(cfs_extra_nf); // malloc
+    free(exps_extra_nf);  // malloc
+    free(lens_extra_nf);  // malloc
+    free(extra_nf); // malloc
+          free(len_gb_xn); // malloc
+          free(start_cf_gb_xn); // malloc
+          free(div_xn); // malloc
+    free(evi); // malloc
           return NULL;
         }
       }
@@ -3836,21 +3837,21 @@ static inline sp_matfglm_t * build_matrixn_unstable_from_bs_trace(int32_t **bdiv
 	fprintf(stderr, "Multiplication by ");
 	display_monomial_full(stderr, nv, NULL, 0, exp);
 	fprintf(stderr, " gets outside the staircase\n");
-        free(matrix->dense_mat);
-        free(matrix->dense_idx);
-        free(matrix->triv_idx);
-        free(matrix->triv_pos);
-        free(matrix->dst);
-        free(matrix);
+        aligned_free(matrix->dense_mat);  // posix
+        aligned_free(matrix->dense_idx);  // posix
+        aligned_free(matrix->triv_idx); // posix
+        aligned_free(matrix->triv_pos); // posix
+        aligned_free(matrix->dst);  // posix
+        free(matrix); // calloc
 
-	free_basis_without_hash_table(&tbr);
-	free(cfs_extra_nf);
-	free(exps_extra_nf);
-	free(lens_extra_nf);
-	free(extra_nf);
-        free(len_gb_xn);
-        free(start_cf_gb_xn);
-        free(div_xn);
+  free_basis_without_hash_table(&tbr);
+  free(cfs_extra_nf); // malloc
+  free(exps_extra_nf);  // malloc
+  free(lens_extra_nf);  // malloc
+  free(extra_nf); // malloc
+        free(len_gb_xn); // malloc
+        free(start_cf_gb_xn); // malloc
+        free(div_xn); // malloc
         return NULL;
       }
     }

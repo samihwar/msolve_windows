@@ -18,6 +18,8 @@
  * Christian Eder
  * Mohab Safey El Din */
 
+ #include "../compat.h"
+
 static inline void duplicate_linear_data(int nthreads, int nvars, int nlins,
                                          nvars_t **blinvars, uint32_t **blineqs,
                                          nvars_t **bsquvars){

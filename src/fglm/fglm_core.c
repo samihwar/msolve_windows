@@ -70,6 +70,8 @@ double omp_get_wtime(void) { return realtime();}
 #include "../upolmat/nmod_poly_mat_pmbasis.c"
 #endif
 
+#include "../compat.h"
+
 void print_fglm_data(
         FILE *file,
         const md_t * const st,
@@ -756,9 +758,9 @@ static void generate_matrix_sequence(sp_matfglm_t *matxn, fglm_data_t *data,
                        RED_32,
                        RED_64);
   }
-  free(Rmat);
-  free(res);
-  free(tres);
+  aligned_free(Rmat); //posix
+  aligned_free(res); //posix
+  aligned_free(tres); //posix
 
 }
 
@@ -1943,7 +1945,7 @@ guess_sequence_colon(sp_matfglmcol_t *matrix, fglm_data_t * data,
 			  linvars, lineqs, nvars, dim_ptr, info_level);
       if (*dim_ptr < tentative_degree) {
 	/* printf ("degree ok!\n"); */
-	free (data_backup);
+	free (data_backup); //malloc
 	break;
       } else {
 	nmod_berlekamp_massey_set_prime (data_bms->BMS,prime);
@@ -2179,5 +2181,3 @@ param_t *nmod_fglm_guess_colon(sp_matfglmcol_t *matrix,
   /* printf ("free fglm\n"); */
   return param;
 }
-
-

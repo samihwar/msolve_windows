@@ -17,6 +17,46 @@
  * Jérémy Berthomieu
  * Christian Eder
  * Mohab Safey El Din */
+#if defined(_WIN32) || defined(_WIN64)
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream) {
+    if (!lineptr || !n || !stream) return -1;
+
+    size_t pos = 0;
+    int c;
+
+    if (*lineptr == NULL || *n == 0) {
+        *n = 128;
+        *lineptr = malloc(*n);
+        if (*lineptr == NULL) return -1;
+    }
+
+    while ((c = fgetc(stream)) != EOF) {
+        if (pos + 1 >= *n) {
+            size_t new_size = *n * 2;
+            char* new_ptr = realloc(*lineptr, new_size);
+            if (!new_ptr) return -1;
+            *lineptr = new_ptr;
+            *n = new_size;
+        }
+
+        (*lineptr)[pos++] = c;
+        if (c == delim) break;
+    }
+
+    if (pos == 0 && c == EOF) return -1;
+
+    (*lineptr)[pos] = '\0';
+    return (ssize_t)pos;
+}
+
+ssize_t getline(char** lineptr, size_t* n, FILE* stream) {
+    return getdelim(lineptr, n, '\n', stream);
+}
+#endif
 
 static inline void store_exponent(const char *term, data_gens_ff_t *gens, int32_t pos)
 {

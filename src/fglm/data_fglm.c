@@ -26,8 +26,9 @@
 #include <flint/nmod_poly_factor.h>
 #include <flint/ulong_extras.h>
 
+#include "../compat.h"
 
-static inline void free_sp_mat_fglm(sp_matfglm_t *mat){
+static inline void free_sp_mat_fglm(sp_matfglm_t *mat){   //not used
   if(mat!=NULL){
     free(mat->dense_mat);
     free(mat->triv_idx);
@@ -80,12 +81,12 @@ static inline fglm_data_t *allocate_fglm_data(szmat_t nrows, szmat_t ncols, szma
 
 
 static inline void free_fglm_data(fglm_data_t *data){
-  free(data->vecinit);
-  free(data->res);
-  free(data->vecmult);
-  free(data->vvec);
-  free(data->pts);
-  free(data);
+  aligned_free(data->vecinit);  //posix
+  aligned_free(data->res);  //posix
+  aligned_free(data->vecmult);  //posix
+  aligned_free(data->vvec); //posix
+  aligned_free(data->pts);  //posix
+  free(data); //malloc
 }
 
 static inline void display_fglm_matrix(FILE *file, sp_matfglm_t *matrix){
@@ -169,8 +170,8 @@ static inline void free_fglm_param(param_t *param){
   for(szmat_t i = 0; i < param->nvars-1; i++){
     nmod_poly_clear(param->coords[i]);
   }
-  free(param->coords);
-  free(param);
+  free(param->coords);  //malloc
+  free(param);  //malloc
 }
 
 static inline fglm_bms_data_t *allocate_fglm_bms_data(szmat_t dim, mp_limb_t prime){
@@ -254,6 +255,5 @@ static inline void free_fglm_bms_data(fglm_bms_data_t *data_bms){
 
   nmod_berlekamp_massey_clear(data_bms->BMS);
 
-  free(data_bms);
+  free(data_bms); // malloc
 }
-
