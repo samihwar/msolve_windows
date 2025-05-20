@@ -33,6 +33,8 @@ libtool
 ltmain.sh
 missing
 stamp-h1
-*.vscode
 msolve.pc
 /msolve
+.vscode/
+*.exe
+
